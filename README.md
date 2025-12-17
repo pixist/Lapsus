@@ -1,0 +1,1 @@
+A WIP re-write of [Lapsus](https://github.com/margooey/Lapsus) in rust using cidre for Apple framework bindings.
