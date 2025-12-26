@@ -7,3 +7,15 @@
 - objc2-core-foundation
 - objc2
 - macos-multitouch
+- log
+- env_logger
+
+## Build
+```shell
+cargo build --release
+```
+
+## Debug
+```shell
+cargo run RUST_LOG=DEBUG
+```

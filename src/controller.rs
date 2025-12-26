@@ -26,6 +26,7 @@ impl Controller {
     pub fn start(&mut self) {
         if !self.is_running {
             self.is_running = true;
+            log::info!("controller start");
             self.monitor.start();
             self.update_desktop_bounds();
             self.sync_state();
@@ -87,6 +88,7 @@ impl Controller {
 
         if is_touching {
             if !self.touch_ended_recently {
+                log::debug!("touch begin detected");
                 self.engine.begin_touch(physical_position);
             }
             self.engine.handle_touch(
@@ -95,6 +97,9 @@ impl Controller {
                 self.monitor.current_normalized_velocity(),
             );
         } else {
+            if self.touch_ended_recently {
+                log::debug!("touch end detected");
+            }
             self.engine.handle_no_touch(
                 physical_position,
                 delta_time,

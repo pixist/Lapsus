@@ -25,6 +25,12 @@ pub fn min_y(rect: &cg::Rect) -> cg::Float {
 }
 
 pub fn union_rect(a: &cg::Rect, b: &cg::Rect) -> cg::Rect {
+    if *a == cg::Rect::null() {
+        return *b;
+    }
+    if *b == cg::Rect::null() {
+        return *a;
+    }
     let min_x = min(a.origin.x, b.origin.x);
     let min_y = min(a.origin.y, b.origin.y);
     let max_x = max(a.origin.x + a.size.width, b.origin.x + b.size.width);

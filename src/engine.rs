@@ -42,6 +42,9 @@ impl Engine {
     }
 
     pub fn set_gliding(&mut self, value: bool) {
+        if self.state.is_gliding != value {
+            log::info!("glide {}", if value { "start" } else { "stop" });
+        }
         self.state.is_gliding = value;
     }
 
@@ -70,12 +73,30 @@ impl Engine {
             dx: delta_pos.x / delta_time,
             dy: delta_pos.y / delta_time,
         };
+        let pointer_speed = Self::magnitude(&pointer_velocity);
 
         let mut velocity = pointer_velocity;
         let mut source: VelocitySource = VelocitySource::Pointer;
-        if let Some(trackpad_velocity) =
-            self.trackpad_velocity_in_pixels(&normalized_trackpad_velocity)
-        {
+        let trackpad_velocity = self.trackpad_velocity_in_pixels(&normalized_trackpad_velocity);
+        let trackpad_speed = trackpad_velocity
+            .as_ref()
+            .map(Self::magnitude)
+            .unwrap_or(0.0);
+        if pointer_speed == 0.0 && trackpad_speed == 0.0 {
+            let normalized_desc = match normalized_trackpad_velocity {
+                Some(v) => format!("({:.3},{:.3})", v.dx, v.dy),
+                None => "none".to_string(),
+            };
+            log::info!(
+                "zero velocity: delta_pos ({:.3},{:.3}), dt {:.4}, normalized {}, bounds_null {}",
+                delta_pos.x,
+                delta_pos.y,
+                delta_time,
+                normalized_desc,
+                self.desktop_bounds == Rect::null(),
+            );
+        }
+        if let Some(trackpad_velocity) = trackpad_velocity {
             if Self::magnitude(&trackpad_velocity) > Self::magnitude(&pointer_velocity) {
                 velocity = trackpad_velocity;
                 source = VelocitySource::Trackpad;
@@ -122,11 +143,18 @@ impl Engine {
 
     fn begin_glide_if_needed(&mut self) {
         let speed = Self::magnitude(&self.state.velocity);
-        if speed < env!("MINIMUM_GLIDE_VELOCITY").parse::<Float>().unwrap() {
+        let min_speed = env!("MINIMUM_GLIDE_VELOCITY").parse::<Float>().unwrap();
+        if speed < min_speed {
+            log::debug!(
+                "glide suppressed: speed {:.3} < min {:.3}",
+                speed,
+                min_speed
+            );
             self.set_gliding(false);
             self.state.velocity = ZERO_VECTOR;
             return;
         } else {
+            log::debug!("glide start: speed {:.3} >= min {:.3}", speed, min_speed);
             self.set_gliding(true);
             self.sync_to_virtual_position();
         }
@@ -170,6 +198,13 @@ impl Engine {
 
     pub fn update_desktop_bounds(&mut self, bounds: Rect) {
         self.desktop_bounds = bounds;
+        log::info!(
+            "desktop bounds: origin ({:.1},{:.1}) size ({:.1},{:.1})",
+            bounds.origin.x,
+            bounds.origin.y,
+            bounds.size.width,
+            bounds.size.height
+        );
         self.clamp_position_to_desktop();
     }
 
@@ -177,19 +212,16 @@ impl Engine {
         let target = self.state.position;
         let mtm = objc2::MainThreadMarker::new().expect("must be on the main thread");
         if let Some(screen) = NSScreen::mainScreen(mtm) {
-            let display_id = unsafe { display::CGMainDisplayID() };
             let local_x = target.x - screen.frame().min().x;
             let local_y_from_bottom = target.y - screen.frame().min().y;
             let local_y = screen.frame().size.height - local_y_from_bottom;
-            let _error = unsafe {
-                display::CGDisplayMoveCursorToPoint(
-                    display_id,
-                    display::CGPoint {
-                        x: local_x,
-                        y: local_y,
-                    },
-                )
-            };
+            let _error = display::CGDisplay::move_cursor_to_point(
+                &display::CGDisplay::main(),
+                display::CGPoint {
+                    x: local_x,
+                    y: local_y,
+                },
+            );
         } else {
             return;
         }

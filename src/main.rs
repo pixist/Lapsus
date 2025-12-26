@@ -6,6 +6,10 @@ pub mod trackpad;
 pub mod utils;
 
 fn main() {
+    use log::LevelFilter;
+    env_logger::builder()
+        .filter_level(LevelFilter::Debug)
+        .init();
     let mut controller = controller::Controller::new();
     controller.start();
     use std::{thread, time::Duration};

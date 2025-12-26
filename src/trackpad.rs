@@ -1,4 +1,5 @@
 // warning: this is llm code because i did not want to write a complete reimplementation of OpenMultitouchSupport in rust
+// i will need to rewrite this myself since i think this is bad
 
 use cidre::cg::{Float, Point, Vector};
 use macos_multitouch::{self, MultitouchDevice};
@@ -50,6 +51,10 @@ impl TrackpadMonitor {
 
         let state = self.state.clone();
         let mut devices = macos_multitouch::get_multitouch_devices();
+        log::info!("trackpad devices: {}", devices.len());
+        if devices.is_empty() {
+            log::warn!("no multitouch devices detected");
+        }
         for device in devices.iter_mut() {
             let state = state.clone();
             let _ = device.register_contact_frame_callback(
@@ -123,7 +128,14 @@ impl TrackpadMonitor {
 fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestamp: f64) {
     state.latest_positions.clear();
     state.latest_positions.extend_from_slice(positions);
+    let was_touching = state.is_touching;
     state.is_touching = !positions.is_empty();
+    if state.is_touching != was_touching {
+        log::info!(
+            "touch {}",
+            if state.is_touching { "start" } else { "end" }
+        );
+    }
 
     if positions.is_empty() {
         state.latest_centroid = None;
