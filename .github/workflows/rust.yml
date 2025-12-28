@@ -13,9 +13,12 @@ jobs:
   build:
 
     runs-on: macos-latest
+    
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: true
     - name: Build
       run: cargo build --verbose --release
     - name: Run tests
