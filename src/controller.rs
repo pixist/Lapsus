@@ -126,14 +126,15 @@ impl Controller {
         let mtm = objc2::MainThreadMarker::new().expect("must be on the main thread");
         let screens = objc2_app_kit::NSScreen::screens(mtm);
         for screen in screens {
+            let frame = screen.frame();
             let rect = Rect {
                 origin: Point {
-                    x: screen.frame().origin.x,
-                    y: screen.frame().origin.y,
+                    x: frame.origin.x,
+                    y: frame.origin.y,
                 },
                 size: Size {
-                    width: screen.frame().size.width,
-                    height: screen.frame().size.height,
+                    width: frame.size.width,
+                    height: frame.size.height,
                 },
             };
             bounds = union_rect(&bounds, &rect);
@@ -141,14 +142,15 @@ impl Controller {
         if bounds == Rect::null() {
             let main_frame = objc2_app_kit::NSScreen::mainScreen(mtm);
             if let Some(screen) = main_frame {
+                let frame = screen.frame();
                 bounds = Rect {
                     origin: Point {
-                        x: screen.frame().origin.x,
-                        y: screen.frame().origin.y,
+                        x: frame.origin.x,
+                        y: frame.origin.y,
                     },
                     size: Size {
-                        width: screen.frame().size.width,
-                        height: screen.frame().size.height,
+                        width: frame.size.width,
+                        height: frame.size.height,
                     },
                 }
             }
