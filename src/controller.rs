@@ -1,5 +1,5 @@
 use crate::utils::{max, union_rect};
-use crate::{engine, trackpad};
+use crate::{config, engine, trackpad};
 use cidre::cg::{Float, Point, Rect, Size, Vector};
 
 pub struct Controller {
@@ -76,13 +76,14 @@ impl Controller {
         let now = objc2_core_foundation::CFAbsoluteTimeGetCurrent();
         let delta_seconds = max(
             now - self.last_update_timestamp,
-            env!("MIN_DT").parse::<f64>().unwrap(),
+            config().min_dt,
         );
         self.last_update_timestamp = now;
         let delta_time = delta_seconds;
+        let ns_mouse_location = objc2_app_kit::NSEvent::mouseLocation();
         let physical_position = Point {
-            x: objc2_app_kit::NSEvent::mouseLocation().x,
-            y: objc2_app_kit::NSEvent::mouseLocation().y,
+            x: ns_mouse_location.x,
+            y: ns_mouse_location.y,
         };
         let is_touching = self.monitor.is_touching();
 
