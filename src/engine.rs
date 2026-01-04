@@ -141,10 +141,7 @@ impl Engine {
 
     pub fn apply_momentum(&mut self, delta_time: Float) {
         let config = config();
-        let decay_factor = max(
-            0.0,
-            1.0 - config.glide_decay_per_second * delta_time
-        );
+        let decay_factor = max(0.0, 1.0 - config.glide_decay_per_second * delta_time);
         self.state.velocity.dx *= decay_factor;
         self.state.velocity.dy *= decay_factor;
 
@@ -161,10 +158,7 @@ impl Engine {
         self.sync_to_virtual_position();
 
         let speed = Self::magnitude(&self.state.velocity);
-        if speed
-            < config.minimum_glide_velocity
-                * config.glide_stop_speed_factor
-        {
+        if speed < config.minimum_glide_velocity * config.glide_stop_speed_factor {
             self.set_gliding(false);
             self.state.velocity = ZERO_VECTOR;
             self.sync_to_virtual_position();
@@ -231,7 +225,7 @@ impl Engine {
             };
             return Some(Self::clamped_velocity(
                 &scaled,
-                config.maximum_momentum_speed
+                config.maximum_momentum_speed,
             ));
         } else {
             return None;

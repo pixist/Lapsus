@@ -6,12 +6,12 @@ pub mod trackpad;
 pub mod utils;
 
 use chrono::Local;
+use cidre::cg::Float;
 use log::LevelFilter;
+use std::env;
 use std::fs::File;
 use std::io::Write;
-use std::env;
 use std::sync::OnceLock;
-use cidre::cg::{Float};
 
 pub struct Config {
     maximum_momentum_speed: f64,
@@ -35,7 +35,9 @@ pub fn config() -> &'static Config {
         glide_stop_speed_factor: env!("GLIDE_STOP_SPEED_FACTOR").parse::<Float>().unwrap(),
         velocity_smoothing: env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap(),
         min_dt: env!("MIN_DT").parse::<Float>().unwrap(),
-        multi_finger_suppression_deadline: env!("MULTI_FINGER_SUPPRESSION_DEADLINE").parse::<f64>().unwrap(),
+        multi_finger_suppression_deadline: env!("MULTI_FINGER_SUPPRESSION_DEADLINE")
+            .parse::<f64>()
+            .unwrap(),
     })
 }
 fn main() {

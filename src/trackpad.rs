@@ -1,14 +1,13 @@
-// warning: this is llm code because i did not want to write a complete reimplementation of OpenMultitouchSupport in rust
-// i will need to rewrite this myself since i think this is bad
-// update: it's actually fine and i'm not gonna rewrite it but i do want to understand it a bit more than i currently do
+// warning: a lot of this is llm code, but some attempted optimizations have been made by me to make it a little better
 
+use crate::{config, engine::ZERO_VECTOR};
 use cidre::cg::{Float, Point, Vector};
 use macos_multitouch::{self, MultitouchDevice};
+use std::mem;
 use std::sync::{Arc, Mutex};
 
-use crate::config;
+pub const ZERO_POINT: Point = Point { x: 0.0, y: 0.0 };
 
-#[derive(Clone, Copy, Debug)]
 pub struct TouchMetrics {
     pub centroid: Option<Point>,
     pub normalized_velocity: Vector,
@@ -60,20 +59,28 @@ impl TrackpadMonitor {
         if devices.is_empty() {
             log::warn!("no multitouch devices detected");
         }
+
+        // Iterate over each multitouch device's data
         for device in devices.iter_mut() {
             let state = state.clone();
             let _ = device.register_contact_frame_callback(
                 move |_device, data: &[macos_multitouch::Finger], timestamp, _frame| {
-                    let positions: Vec<Point> = data
-                        .iter()
-                        .map(|finger| Point {
+                    let mut state = state.lock().expect("trackpad state lock poisoned");
+
+                    // Reuse the existing positions buffer
+                    let mut positions = mem::take(&mut state.latest_positions);
+                    positions.clear();
+                    positions.reserve(data.len());
+
+                    // Get the position of each finger and update the touch metrics
+                    for finger in data {
+                        positions.push(Point {
                             x: finger.normalized.pos.x as Float,
                             y: finger.normalized.pos.y as Float,
-                        })
-                        .collect();
-
-                    let mut state = state.lock().expect("trackpad state lock poisoned");
+                        });
+                    }
                     update_touch_metrics(&mut state, &positions, timestamp);
+                    state.latest_positions = positions;
                 },
             );
         }
@@ -129,6 +136,7 @@ impl TrackpadMonitor {
         }
     }
 
+    // Flag to prevent erroneous gliding when there is more than one finger touching the trackpad
     pub fn should_suppress_glide(&self) -> bool {
         let deadline = self
             .state
@@ -140,12 +148,10 @@ impl TrackpadMonitor {
 }
 
 fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestamp: f64) {
-    state.latest_positions.clear();
-    state.latest_positions.extend_from_slice(positions);
+    let config = config();
     if positions.len() > 1 {
         let now = objc2_core_foundation::CFAbsoluteTimeGetCurrent();
-        let duration = config().multi_finger_suppression_deadline;
-        state.suppress_glide_deadline = now + duration;
+        state.suppress_glide_deadline = now + config.multi_finger_suppression_deadline;
     }
     let was_touching = state.is_touching;
     state.is_touching = !positions.is_empty();
@@ -156,12 +162,13 @@ fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestam
     if positions.is_empty() {
         state.latest_centroid = None;
         state.previous_centroid = None;
-        state.normalized_velocity = Vector { dx: 0.0, dy: 0.0 };
+        state.normalized_velocity = ZERO_VECTOR;
         state.last_sample_timestamp = timestamp;
         return;
     }
 
-    let mut centroid = Point { x: 0.0, y: 0.0 };
+    // Find the average position of all the current touch points
+    let mut centroid = ZERO_POINT;
     for point in positions {
         centroid.x += point.x;
         centroid.y += point.y;
@@ -169,32 +176,31 @@ fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestam
     let divisor = positions.len() as Float;
     centroid.x /= divisor;
     centroid.y /= divisor;
-
     state.latest_centroid = Some(centroid);
 
+    // Determine the velocity given the previous average if it exists
     if let Some(previous) = state.previous_centroid {
         if state.last_sample_timestamp > 0.0 {
             let mut delta_time = (timestamp - state.last_sample_timestamp) as Float;
-            if delta_time < config().min_dt {
-                delta_time = config().min_dt;
+            if delta_time < config.min_dt {
+                delta_time = config.min_dt;
             }
             let raw_velocity = Vector {
                 dx: (centroid.x - previous.x) / delta_time,
                 dy: (centroid.y - previous.y) / delta_time,
             };
+            // Apply velocity smoothing
             state.normalized_velocity = Vector {
-                dx: state.normalized_velocity.dx
-                    * (1.0 - config().velocity_smoothing)
-                    + raw_velocity.dx * config().velocity_smoothing,
-                dy: state.normalized_velocity.dy
-                    * (1.0 - config().velocity_smoothing)
-                    + raw_velocity.dy * config().velocity_smoothing,
+                dx: state.normalized_velocity.dx * (1.0 - config.velocity_smoothing)
+                    + raw_velocity.dx * config.velocity_smoothing,
+                dy: state.normalized_velocity.dy * (1.0 - config.velocity_smoothing)
+                    + raw_velocity.dy * config.velocity_smoothing,
             };
         } else {
-            state.normalized_velocity = Vector { dx: 0.0, dy: 0.0 };
+            state.normalized_velocity = ZERO_VECTOR;
         }
     } else {
-        state.normalized_velocity = Vector { dx: 0.0, dy: 0.0 };
+        state.normalized_velocity = ZERO_VECTOR;
     }
 
     state.previous_centroid = Some(centroid);
