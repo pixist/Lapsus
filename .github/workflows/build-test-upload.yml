@@ -1,4 +1,4 @@
-name: Rust
+name: Build, Test & Upload Artifact
 
 on:
   push:
