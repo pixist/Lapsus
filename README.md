@@ -1,31 +1,36 @@
-# A WIP re-write of [Lapsus](https://github.com/margooey/Lapsus) in rust using various crates for Apple framework bindings.
+<div style="text-align: center;">
+<h1>Lapsus (Rust)</h1>
+</div>
 
-## What is it
+<div style="text-align: center;"><h2>What is this?</h2></div>
 Lapsus is an application designed to emulate the feeling of using a trackball. It applies "momentum" to your cursor so that it glides (or slides) across the screen until slowly coming to a stop. Lapsus was born out of Magnes, which was an application designed to emulate the iPadOS cursor as a whole.
 
-## Crates used:
-- cidre
-- core-graphics
-- objc2-app-kit
-- objc2-foundation
-- objc2-core-foundation
-- macos-multitouch
-- log
-- env_logger
-- chrono
+<div style="text-align: center;"><h2>Download</h2></div>
 
-## Download
-You can download Lapsus_Rust on the [Releases](https://github.com/margooey/lapsus_rust/releases) page. You can also download any built artifacts from the [workflow](https://github.com/margooey/lapsus_rust/actions).
+You can download Lapsus on the [Releases](https://github.com/margooey/lapsus_rust/releases) page. You can also download any built artifacts from the [workflow](https://github.com/margooey/lapsus_rust/actions). 
 
-## Build
+You can run Lapsus simply by double-clicking on the binary. You can stop the glide behavior by pressing `Ctrl+C` or by killing the terminal session.
+
+<div style="text-align: center;"><h2>Build</h2></div>
+
 ```shell
 cargo build --release
 ```
 
-## Debug
+<div style="text-align: center;"><h2>Debugging</h2></div>
+
+Logs are output to a logfile in the directory where you run Lapsus.
 ```shell
 cargo run RUST_LOG=DEBUG
 ```
 
-## License
+<div style="text-align: center;"><h2>Credits</h2></div>
+
+- Yury Korolev: [cidre](https://github.com/yury/cidre)
+- jonas-k: [macos-multitouch](https://github.com/jonas-k/macos-multitouch)
+- servo: [core-graphics](https://github.com/servo/core-foundation-rs)
+- Mads Marquart: [objc2](https://github.com/madsmtm/objc2)
+
+
+<div style="text-align: center;"><h2>License</h2></div>
 Lapsus_Rust is licensed under a custom non-commercial license.
