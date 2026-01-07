@@ -135,7 +135,7 @@ impl Engine {
         } else {
             log::debug!("glide start: speed {:.3} >= min {:.3}", speed, min_speed);
             self.set_gliding(true);
-            self.sync_to_virtual_position();
+            self.update_cursor_position_on_screen();
         }
     }
 
@@ -155,13 +155,13 @@ impl Engine {
         self.state.position.y += momentum_delta.dy;
         self.state.last_input_delta = momentum_delta;
 
-        self.sync_to_virtual_position();
+        self.update_cursor_position_on_screen();
 
         let speed = Self::magnitude(&self.state.velocity);
         if speed < config.minimum_glide_velocity * config.glide_stop_speed_factor {
             self.set_gliding(false);
             self.state.velocity = ZERO_VECTOR;
-            self.sync_to_virtual_position();
+            self.update_cursor_position_on_screen();
         }
     }
 
@@ -180,7 +180,8 @@ impl Engine {
         );
     }
 
-    pub fn sync_to_virtual_position(&mut self) {
+    // Advance the cursor position based on the current momentum
+    pub fn update_cursor_position_on_screen(&mut self) {
         let target = self.state.position;
         let mtm = objc2_foundation::MainThreadMarker::new().expect("must be on the main thread");
         if let Some(screen) = NSScreen::mainScreen(mtm) {
@@ -199,7 +200,7 @@ impl Engine {
         }
     }
 
-    pub fn sync_state(&mut self, physical_position: Point) {
+    pub fn update_engine_state(&mut self, physical_position: Point) {
         self.state.position = physical_position;
         self.state.previous_position = physical_position;
         self.state.last_input_delta = ZERO_VECTOR;

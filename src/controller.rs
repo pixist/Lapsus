@@ -29,7 +29,7 @@ impl Controller {
             log::debug!("controller start");
             self.monitor.start();
             self.update_desktop_bounds();
-            self.sync_state();
+            self.update_engine_state();
             self.is_touching = self.monitor.is_touching();
         }
     }
@@ -108,13 +108,13 @@ impl Controller {
         self.touch_ended_recently = is_touching;
     }
 
-    fn sync_state(&mut self) {
+    fn update_engine_state(&mut self) {
         let current_position = objc2_app_kit::NSEvent::mouseLocation();
         let physical_position = Point {
             x: current_position.x,
             y: current_position.y,
         };
-        self.engine.sync_state(physical_position);
+        self.engine.update_engine_state(physical_position);
         self.last_update_timestamp = objc2_core_foundation::CFAbsoluteTimeGetCurrent();
     }
 
