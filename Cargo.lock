@@ -12,6 +12,7 @@ dependencies = [
  "env_logger",
  "log",
  "macos_multitouch",
+ "objc2",
  "objc2-app-kit",
  "objc2-core-foundation",
  "objc2-foundation",

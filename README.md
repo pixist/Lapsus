@@ -9,7 +9,7 @@ Lapsus is an application designed to emulate the feeling of using a trackball. I
 
 You can download Lapsus on the [Releases](https://github.com/margooey/Lapsus/releases) page. You can also download any built artifacts from the [workflow](https://github.com/margooey/Lapsus/actions). 
 
-You can run Lapsus simply by double-clicking on the binary. You can stop the glide behavior by pressing `Ctrl+C` or by killing the terminal session.
+You can run Lapsus by opening the `Lapsus.app` bundle (or by double-clicking the binary). Use the menu bar icon to quit when running as an app.
 
 <div align="center"><h2>Build</h2></div>
 

@@ -1,3 +1,4 @@
+pub mod app;
 pub mod controller;
 pub mod engine;
 pub mod tests;
@@ -58,12 +59,5 @@ fn main() {
         })
         .init();
 
-    let mut controller = controller::Controller::new();
-    controller.start();
-    use std::{thread, time::Duration};
-    loop {
-        utils::disable_local_event_suppression();
-        controller.update_state();
-        thread::sleep(Duration::from_secs_f64(config().min_dt));
-    }
+    app::run();
 }
