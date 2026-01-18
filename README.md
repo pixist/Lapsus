@@ -34,3 +34,4 @@ cargo run RUST_LOG=DEBUG
 
 <div align="center"><h2>License</h2></div>
 Lapsus is licensed under a custom non-commercial license.
+
