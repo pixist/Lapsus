@@ -1,6 +1,6 @@
 use crate::{config, controller::Controller, utils};
 use objc2::rc::{Allocated, Retained};
-use objc2::runtime::{AnyObject, ProtocolObject};
+use objc2::runtime::ProtocolObject;
 use objc2::{class, define_class, msg_send, sel, ClassType, Ivars, MainThreadMarker, MainThreadOnly};
 use objc2_app_kit::{
     NSApp, NSApplication, NSApplicationActivationPolicy, NSApplicationDelegate, NSMenu,
@@ -98,7 +98,7 @@ fn schedule_timer(target: &AppDelegate) -> Retained<NSTimer> {
             scheduledTimerWithTimeInterval: config().min_dt,
             target: target,
             selector: sel!(tick:),
-            userInfo: ptr::null::<AnyObject>(),
+            userInfo: ptr::null(),
             repeats: true
         ]
     }
