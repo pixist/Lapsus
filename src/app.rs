@@ -1,7 +1,9 @@
 use crate::{config, controller::Controller, utils};
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::ProtocolObject;
-use objc2::{class, define_class, msg_send, sel, ClassType, Ivars, MainThreadMarker, MainThreadOnly};
+use objc2::{
+    class, define_class, msg_send, sel, ClassType, DefinedClass, MainThreadMarker, MainThreadOnly,
+};
 use objc2_app_kit::{
     NSApp, NSApplication, NSApplicationActivationPolicy, NSApplicationDelegate, NSMenu,
     NSMenuItem, NSStatusBar, NSStatusBarButton, NSStatusItem,
@@ -10,21 +12,24 @@ use objc2_foundation::{NSNotification, NSObject, NSObjectProtocol, NSString, NST
 use std::cell::RefCell;
 use std::ptr;
 
+struct AppDelegateIvars {
+    controller: RefCell<Controller>,
+    status_item: RefCell<Option<Retained<NSStatusItem>>>,
+    menu: RefCell<Option<Retained<NSMenu>>>,
+    timer: RefCell<Option<Retained<NSTimer>>>,
+}
+
 define_class!(
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[derive(Debug)]
-    struct AppDelegate {
-        controller: RefCell<Controller>,
-        status_item: RefCell<Option<Retained<NSStatusItem>>>,
-        menu: RefCell<Option<Retained<NSMenu>>>,
-        timer: RefCell<Option<Retained<NSTimer>>>,
-    }
+    #[ivars = AppDelegateIvars]
+    struct AppDelegate;
 
     impl AppDelegate {
         #[unsafe(method_id(init))]
         fn init(this: Allocated<Self>) -> Retained<Self> {
-            let this = this.set_ivars(Ivars::<Self> {
+            let this = this.set_ivars(AppDelegateIvars {
                 controller: RefCell::new(Controller::new()),
                 status_item: RefCell::new(None),
                 menu: RefCell::new(None),
@@ -63,6 +68,24 @@ define_class!(
         }
     }
 );
+
+impl AppDelegate {
+    fn controller(&self) -> &RefCell<Controller> {
+        &self.ivars().controller
+    }
+
+    fn status_item(&self) -> &RefCell<Option<Retained<NSStatusItem>>> {
+        &self.ivars().status_item
+    }
+
+    fn menu(&self) -> &RefCell<Option<Retained<NSMenu>>> {
+        &self.ivars().menu
+    }
+
+    fn timer(&self) -> &RefCell<Option<Retained<NSTimer>>> {
+        &self.ivars().timer
+    }
+}
 
 fn build_status_item(mtm: MainThreadMarker) -> (Retained<NSStatusItem>, Retained<NSMenu>) {
     let status_bar: Retained<NSStatusBar> = unsafe { msg_send![NSStatusBar::class(), systemStatusBar] };
