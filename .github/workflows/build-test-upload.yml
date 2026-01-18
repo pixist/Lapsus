@@ -23,8 +23,15 @@ jobs:
       run: cargo build --verbose --release
     - name: Run tests
       run: cargo test --verbose
+    - name: Package .app bundle
+      run: |
+        APP_NAME=Lapsus
+        APP_DIR="target/release/${APP_NAME}.app/Contents"
+        mkdir -p "${APP_DIR}/MacOS" "${APP_DIR}/Resources"
+        cp "target/release/${APP_NAME}" "${APP_DIR}/MacOS/${APP_NAME}"
+        cp "macos/Info.plist" "${APP_DIR}/Info.plist"
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Lapsus
-        path: target/release/Lapsus
+        name: Lapsus-macos-app
+        path: target/release/Lapsus.app
