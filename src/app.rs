@@ -108,7 +108,7 @@ fn build_status_item(mtm: MainThreadMarker) -> (Retained<NSStatusItem>, Retained
         )
     };
     let app = NSApp(mtm);
-    let _: () = unsafe { msg_send![&*quit_item, setTarget: &*app] };
+    unsafe { quit_item.setTarget(Some(&*app)) };
     menu.addItem(&quit_item);
     status_item.setMenu(Some(&menu));
     (status_item, menu)
