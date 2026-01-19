@@ -1,6 +1,7 @@
 use crate::utils::{max, union_rect};
 use crate::{config, engine, trackpad};
 use cidre::cg::{Float, Point, Rect, Size, Vector};
+use std::fmt;
 
 pub struct Controller {
     pub engine: engine::Engine,
@@ -9,6 +10,17 @@ pub struct Controller {
     last_update_timestamp: f64,
     touch_ended_recently: bool,
     pub is_touching: bool,
+}
+
+impl fmt::Debug for Controller {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Controller")
+            .field("is_running", &self.is_running)
+            .field("last_update_timestamp", &self.last_update_timestamp)
+            .field("touch_ended_recently", &self.touch_ended_recently)
+            .field("is_touching", &self.is_touching)
+            .finish()
+    }
 }
 
 impl Controller {
